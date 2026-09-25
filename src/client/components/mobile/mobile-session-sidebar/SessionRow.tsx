@@ -1,6 +1,7 @@
-import { Archive, ArchiveRestore, Check, Loader2, Pencil, Trash2 } from 'lucide-preact';
+import { Check, Loader2, MoreHorizontal } from 'lucide-preact';
 import type { SessionItemData } from '@/shared/types';
 import { useInlineRename } from '@/client/hooks/ui/inline-rename';
+import { SessionActionsMenu, useRowMenu } from '@/client/components/common/session-actions-menu';
 
 export interface MobileSessionRowProps {
   session: SessionItemData;
@@ -37,6 +38,9 @@ export function MobileSessionRow({
     handleKeyDown,
     handleBlur,
   } = useInlineRename(session.title, onRename);
+  // One trigger for every row action; also reachable by long-press contextmenu.
+  const menu = useRowMenu();
+  const hasActions = Boolean(onRename || onArchive || onDelete);
 
   if (isEditing) {
     return (
@@ -55,61 +59,60 @@ export function MobileSessionRow({
   }
 
   return (
-    <div
-      className={`w-full rounded-lg flex items-center transition-colors ${
-        isActive ? 'bg-ink/10 font-medium text-ink' : 'hover:bg-ink/5 text-ink/85'
-      }`}
-    >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="flex-1 text-left px-3 py-2 flex items-center justify-between min-w-0"
+    <>
+      <div
+        onContextMenu={hasActions ? menu.openAtCursor : undefined}
+        className={`w-full rounded-lg flex items-center transition-colors ${
+          isActive ? 'bg-ink/10 font-medium text-ink' : 'hover:bg-ink/5 text-ink/85'
+        }`}
       >
-        <div className="flex items-center space-x-1.5 min-w-0 pr-2">
-          <span className="w-4 flex-shrink-0 flex items-center justify-center">
-            {status === 'stream' && <Loader2 size={13} className="text-ink/50 animate-spin" />}
-            {(status === 'finish' || status === 'abort') && <Check size={13} className="text-ink/50" />}
-          </span>
-          {showTreeGlyph && <span className="text-ink/40 text-xs flex-shrink-0 font-mono">&gt;</span>}
-          <span className="text-xs truncate leading-snug">
-            {session.title.charAt(0).toUpperCase() + session.title.slice(1)}
-          </span>
-        </div>
-
-        <span className="text-[11px] text-ink/45 font-mono flex-shrink-0 ml-2">{timeAgo ?? ''}</span>
-      </button>
-
-      {onRename && (
         <button
           type="button"
-          onClick={startRename}
-          title="Rename session"
-          className="flex-shrink-0 p-2 text-ink/35 hover:text-ink rounded-lg cursor-pointer"
+          onClick={onSelect}
+          className="flex-1 text-left px-3 py-2 flex items-center justify-between min-w-0"
         >
-          <Pencil size={14} />
-        </button>
-      )}
+          <div className="flex items-center space-x-1.5 min-w-0 pr-2">
+            <span className="w-4 flex-shrink-0 flex items-center justify-center">
+              {status === 'stream' && <Loader2 size={13} className="text-ink/50 animate-spin" />}
+              {(status === 'finish' || status === 'abort') && <Check size={13} className="text-ink/50" />}
+            </span>
+            {showTreeGlyph && <span className="text-ink/40 text-xs flex-shrink-0 font-mono">&gt;</span>}
+            <span className="text-xs truncate leading-snug">
+              {session.title.charAt(0).toUpperCase() + session.title.slice(1)}
+            </span>
+          </div>
 
-      <button
-        type="button"
-        onClick={onArchive}
-        title={session.is_archived === 1 ? 'Unarchive session' : 'Archive session'}
-        className="flex-shrink-0 p-2 text-ink/35 hover:text-ink rounded-lg cursor-pointer"
-      >
-        {session.is_archived === 1 ? <ArchiveRestore size={14} /> : <Archive size={14} />}
-      </button>
-
-      {onDelete && (
-        <button
-          type="button"
-          onClick={onDelete}
-          title="Delete session"
-          aria-label="Delete session"
-          className="flex-shrink-0 p-2 mr-1 text-ink/35 hover:text-error rounded-lg cursor-pointer"
-        >
-          <Trash2 size={14} />
+          <span className="text-[11px] text-ink/45 font-mono flex-shrink-0 ml-2">{timeAgo ?? ''}</span>
         </button>
+
+        {/* Always visible, unlike the desktop row's hover-revealed trigger: a
+            touch surface has no hover, and the three always-on action buttons
+            this replaced consumed a third of a phone's row width. */}
+        {hasActions && (
+          <button
+            type="button"
+            onClick={menu.openBelow}
+            title="Session actions"
+            aria-label="Session actions"
+            aria-haspopup="menu"
+            aria-expanded={menu.anchor !== null}
+            className="flex-shrink-0 p-2 mr-1 text-ink/35 hover:text-ink rounded-lg cursor-pointer"
+          >
+            <MoreHorizontal size={16} />
+          </button>
+        )}
+      </div>
+
+      {menu.anchor && (
+        <SessionActionsMenu
+          anchor={menu.anchor}
+          isArchived={session.is_archived === 1}
+          onRename={onRename ? startRename : undefined}
+          onArchive={onArchive}
+          onDelete={onDelete}
+          onClose={menu.close}
+        />
       )}
-    </div>
+    </>
   );
 }
