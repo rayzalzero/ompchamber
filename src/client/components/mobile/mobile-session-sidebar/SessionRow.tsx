@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Check, Loader2, Pencil } from 'lucide-preact';
+import { Archive, ArchiveRestore, Check, Loader2, Pencil, Trash2 } from 'lucide-preact';
 import type { SessionItemData } from '@/shared/types';
 import { useInlineRename } from '@/client/hooks/ui/inline-rename';
 
@@ -11,6 +11,9 @@ export interface MobileSessionRowProps {
   showTreeGlyph?: boolean;
   onSelect: () => void;
   onArchive: () => void;
+  /** Omitted for a session that cannot be deleted yet (a pending `new-…` chat,
+   *  which has no transcript anywhere). */
+  onDelete?: () => void;
   onRename?: (name: string) => void;
 }
 
@@ -22,6 +25,7 @@ export function MobileSessionRow({
   showTreeGlyph = false,
   onSelect,
   onArchive,
+  onDelete,
   onRename,
 }: MobileSessionRowProps) {
   const {
@@ -90,10 +94,22 @@ export function MobileSessionRow({
         type="button"
         onClick={onArchive}
         title={session.is_archived === 1 ? 'Unarchive session' : 'Archive session'}
-        className="flex-shrink-0 p-2 mr-1 text-ink/35 hover:text-ink rounded-lg cursor-pointer"
+        className="flex-shrink-0 p-2 text-ink/35 hover:text-ink rounded-lg cursor-pointer"
       >
         {session.is_archived === 1 ? <ArchiveRestore size={14} /> : <Archive size={14} />}
       </button>
+
+      {onDelete && (
+        <button
+          type="button"
+          onClick={onDelete}
+          title="Delete session"
+          aria-label="Delete session"
+          className="flex-shrink-0 p-2 mr-1 text-ink/35 hover:text-error rounded-lg cursor-pointer"
+        >
+          <Trash2 size={14} />
+        </button>
+      )}
     </div>
   );
 }

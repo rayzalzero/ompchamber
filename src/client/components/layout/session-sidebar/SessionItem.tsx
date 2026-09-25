@@ -1,5 +1,5 @@
 import type { TargetedMouseEvent } from 'preact';
-import { Archive, ArchiveRestore, Check, ChevronDown, ChevronRight, CircleQuestionMark, Loader2, Pencil } from 'lucide-preact';
+import { Archive, ArchiveRestore, Check, ChevronDown, ChevronRight, CircleQuestionMark, Loader2, Pencil, Trash2 } from 'lucide-preact';
 import { useInlineRename } from '@/client/hooks/ui/inline-rename';
 
 export interface SessionItemProps {
@@ -11,6 +11,9 @@ export interface SessionItemProps {
   awaitingInput?: boolean;
   onClick?: () => void;
   onArchive?: () => void;
+  /** Omitted for a session that cannot be deleted yet (a pending `new-…` chat,
+   *  which has no transcript anywhere). */
+  onDelete?: () => void;
   onRename?: (name: string) => void;
   expandable?: boolean;
   isExpanded?: boolean;
@@ -26,6 +29,7 @@ export function SessionItem({
   awaitingInput = false,
   onClick,
   onArchive,
+  onDelete,
   onRename,
   expandable = false,
   isExpanded = false,
@@ -130,8 +134,8 @@ export function SessionItem({
         </span>
       )}
 
-      {/* Quick Actions: Rename / Archive on Hover */}
-      {!isEditing && (onRename || onArchive) && (
+      {/* Quick Actions: Rename / Archive / Delete on Hover */}
+      {!isEditing && (onRename || onArchive || onDelete) && (
         <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
           {onRename && (
             <button
@@ -157,6 +161,20 @@ export function SessionItem({
               className="p-1 text-ink/40 hover:text-ink bg-paper/90 hover:bg-ink/10 rounded shadow-xs cursor-pointer"
             >
               {isArchived ? <ArchiveRestore size={12} /> : <Archive size={12} />}
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              title="Delete session"
+              aria-label="Delete session"
+              className="p-1 text-ink/40 hover:text-error bg-paper/90 hover:bg-error/10 rounded shadow-xs cursor-pointer"
+            >
+              <Trash2 size={12} />
             </button>
           )}
         </div>

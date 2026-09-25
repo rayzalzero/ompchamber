@@ -4,6 +4,8 @@ import { MobileSessionRow } from '@/client/components/mobile/mobile-session-side
 import { WorkspaceOptionsMenu } from '@/client/components/common/workspace-options-menu';
 import { useShowMore } from '@/client/hooks/ui/show-more';
 import { useWorkspaceFolderActions } from '@/client/hooks/workspace/workspace-folder-actions';
+import { useSessionDelete } from '@/client/hooks/workspace/session-delete';
+import { SessionDeleteModal } from '@/client/components/common/session-delete-modal';
 import { getProjectIcon } from '@/shared/lib/workspace/project-icon';
 import { relativeTimeAgo } from '@/shared/lib/workspace/relative-time';
 import { useOnClickOutside } from '@/client/hooks/ui/on-click-outside';
@@ -44,6 +46,7 @@ export function MobileSessionCategory({
     handleArchive,
     handleRename,
   } = useWorkspaceFolderActions(folder, refresh);
+  const sessionDelete = useSessionDelete();
 
   useOnClickOutside(menuRef, () => {
     setShowMenu(false);
@@ -162,6 +165,13 @@ export function MobileSessionCategory({
               timeAgo={relativeTimeAgo(session.updated_at ?? session.created_at)}
               onSelect={() => onSelectSession(session.id)}
               onArchive={() => handleArchive(session)}
+              onDelete={
+                // A pending `new-…` chat has no transcript anywhere yet — there
+                // is nothing to delete, and the server refuses it.
+                String(session.id).startsWith('new-')
+                  ? undefined
+                  : () => sessionDelete.requestDelete(session)
+              }
               onRename={String(session.id).startsWith('new-') ? undefined : (name) => void handleRename(session, name)}
             />
           ))}
@@ -178,6 +188,14 @@ export function MobileSessionCategory({
           )}
         </div>
       )}
+
+      <SessionDeleteModal
+        session={sessionDelete.pending}
+        isDeleting={sessionDelete.isDeleting}
+        error={sessionDelete.error}
+        onClose={sessionDelete.cancelDelete}
+        onConfirm={() => void sessionDelete.confirmDelete()}
+      />
     </div>
   );
 }
