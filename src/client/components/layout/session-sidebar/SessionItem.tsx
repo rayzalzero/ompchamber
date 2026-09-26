@@ -153,7 +153,7 @@ export function SessionItem({
             aria-label="Session actions"
             aria-haspopup="menu"
             aria-expanded={menu.anchor !== null}
-            className="shrink-0 p-1 -mr-0.5 text-ink/40 hover:text-ink hover:bg-ink/10 rounded cursor-pointer transition-opacity opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100"
+            className="shrink-0 p-1 text-ink/40 hover:text-ink hover:bg-ink/10 rounded cursor-pointer transition-opacity opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100"
           >
             <MoreHorizontal size={14} />
           </button>
